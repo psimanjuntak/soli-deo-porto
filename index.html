@@ -435,7 +435,9 @@
 
     <div class="prelude-text">
       <div class="prelude-eyebrow">— Sebuah Perjalanan —</div>
-      <p class="fade-words" id="prelude-paragraph">Pada penghujung tahun 2026, Soli Deo Choir HKBP Serpong akan berdiri di panggung Penabur International Choir Festival—sebuah perjalanan yang berawal dari latihan sederhana di sakristi gereja, kini bertumbuh menjadi kesaksian iman yang dibawa hingga panggung dunia. Setiap nada yang kami lantunkan, kami persembahkan hanya bagi Allah, sumber dari segala suara dan sukacita.</p>
+      <p class="fade-words" id="prelude-paragraph">Pada September 2026, Soli Deo Choir HKBP Serpong akan melangkah ke panggung Penabur International Choir Festival 2026—membawa suara kami sebagai bagian dari misi yang lebih besar: menghidupkan kembali paduan suara gereja di tengah dunia.</p>
+      <p class="fade-words" id="prelude-paragraph-2" style="margin-top:clamp(18px,2.4vh,32px)">Untuk mewujudkan perjalanan ini, kami mengundang amang, inang, abang, kakak, dan teman-teman semua untuk mendukung kami melalui bazaar kami. Setiap pembelian adalah bagian dari langkah kami menuju PICF 2026.</p>
+      <p class="fade-words" id="prelude-paragraph-3" style="margin-top:clamp(18px,2.4vh,32px)">Sementara menanti, silakan menikmati beberapa persembahan Soli Deo Choir dari panggung-panggung yang telah kami lalui.</p>
     </div>
   </div>
 </section>
@@ -787,39 +789,47 @@
 
   // ——— Prelude: word-by-word fade + auto-advance ———
   const preludeEl = document.getElementById('prelude');
-  const paragraphEl = document.getElementById('prelude-paragraph');
-  if (paragraphEl){
-    const text = paragraphEl.textContent.trim();
-    paragraphEl.textContent = '';
+  function wrapWords(el, baseDelay){
+    if (!el) return 0;
+    const text = el.textContent.trim();
+    el.textContent = '';
     const words = text.split(/(\s+)/);
-    words.forEach((tok, idx) => {
+    let wordIdx = 0;
+    words.forEach(tok => {
       if (/^\s+$/.test(tok)){
-        paragraphEl.appendChild(document.createTextNode(tok));
+        el.appendChild(document.createTextNode(tok));
       } else if (tok.length){
         const span = document.createElement('span');
         span.className = 'w';
         span.textContent = tok;
-        span.style.transitionDelay = (idx * 60) + 'ms';
-        paragraphEl.appendChild(span);
+        span.style.transitionDelay = (baseDelay + wordIdx * 60) + 'ms';
+        el.appendChild(span);
+        wordIdx++;
       }
     });
+    return wordIdx;
   }
+  const paragraphEl = document.getElementById('prelude-paragraph');
+  const paragraphEl2 = document.getElementById('prelude-paragraph-2');
+  const paragraphEl3 = document.getElementById('prelude-paragraph-3');
+  let delay = 0;
+  delay += wrapWords(paragraphEl, delay) * 60 + 400;
+  delay += wrapWords(paragraphEl2, delay) * 60 + 400;
+  wrapWords(paragraphEl3, delay);
   let preludeStarted = false;
   let preludeAdvanceTimer = 0;
   function startPreludeReveal(){
     if (preludeStarted) return;
     preludeStarted = true;
-    paragraphEl && paragraphEl.classList.add('go');
-    const totalWords = paragraphEl ? paragraphEl.querySelectorAll('.w').length : 0;
-    const revealMs = 20000;
+    [paragraphEl, paragraphEl2, paragraphEl3].forEach(el => el && el.classList.add('go'));
     clearTimeout(preludeAdvanceTimer);
     preludeAdvanceTimer = setTimeout(() => {
       if (state.autoAdvance) scrollTo(0);
-    }, revealMs);
+    }, 28000);
   }
   function resetPrelude(){
     preludeStarted = false;
-    paragraphEl && paragraphEl.classList.remove('go');
+    [paragraphEl, paragraphEl2, paragraphEl3].forEach(el => el && el.classList.remove('go'));
     clearTimeout(preludeAdvanceTimer);
   }
   if (preludeEl){
