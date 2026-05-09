@@ -434,7 +434,7 @@
     </figure>
 
     <div class="prelude-text">
-<p class="fade-words" id="prelude-paragraph">Pada September 2026, Soli Deo Choir HKBP Serpong akan melangkah ke panggung Penabur International Choir Festival 2026—membawa suara kami sebagai bagian dari misi yang lebih besar: menghidupkan kembali paduan suara gereja di tengah dunia.</p>
+<p class="fade-words" id="prelude-paragraph">Pada September 2026, Soli Deo Choir HKBP Serpong akan melangkah ke panggung Penabur International Choir Festival 2026—membawa suara kami sebagai bagian dari misi yang lebih besar: <strong>menghidupkan kembali paduan suara gereja di tengah dunia.</strong></p>
       <p class="fade-words" id="prelude-paragraph-2" style="margin-top:clamp(18px,2.4vh,32px)">Untuk mewujudkan perjalanan ini, kami mengundang amang, inang, abang, kakak, dan teman-teman semua untuk mendukung kami melalui bazaar kami. Setiap pembelian adalah bagian dari langkah kami menuju PICF 2026.</p>
       <p class="fade-words" id="prelude-paragraph-3" style="margin-top:clamp(18px,2.4vh,32px)">Sementara menanti, silakan menikmati beberapa persembahan Soli Deo Choir dari panggung-panggung yang telah kami lalui.</p>
     </div>
@@ -790,22 +790,32 @@
   const preludeEl = document.getElementById('prelude');
   function wrapWords(el, baseDelay){
     if (!el) return 0;
-    const text = el.textContent.trim();
-    el.textContent = '';
-    const words = text.split(/(\s+)/);
     let wordIdx = 0;
-    words.forEach(tok => {
-      if (/^\s+$/.test(tok)){
-        el.appendChild(document.createTextNode(tok));
-      } else if (tok.length){
-        const span = document.createElement('span');
-        span.className = 'w';
-        span.textContent = tok;
-        span.style.transitionDelay = (baseDelay + wordIdx * 200) + 'ms';
-        el.appendChild(span);
-        wordIdx++;
+    function processNode(node, container){
+      if (node.nodeType === Node.TEXT_NODE){
+        const tokens = node.textContent.split(/(\s+)/);
+        tokens.forEach(tok => {
+          if (/^\s+$/.test(tok)){
+            container.appendChild(document.createTextNode(tok));
+          } else if (tok.length){
+            const span = document.createElement('span');
+            span.className = 'w';
+            span.textContent = tok;
+            span.style.transitionDelay = (baseDelay + wordIdx * 200) + 'ms';
+            container.appendChild(span);
+            wordIdx++;
+          }
+        });
+      } else if (node.nodeType === Node.ELEMENT_NODE){
+        const clone = document.createElement(node.tagName);
+        [...node.attributes].forEach(a => clone.setAttribute(a.name, a.value));
+        [...node.childNodes].forEach(child => processNode(child, clone));
+        container.appendChild(clone);
       }
-    });
+    }
+    const children = [...el.childNodes];
+    el.innerHTML = '';
+    children.forEach(child => processNode(child, el));
     return wordIdx;
   }
   const paragraphEl = document.getElementById('prelude-paragraph');
