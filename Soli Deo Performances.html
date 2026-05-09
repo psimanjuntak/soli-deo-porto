@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Soli Deo Choir · Performances</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF5;
+    --bg-warm:#F5F1E6;
+    --ink:#2A2620;
+    --ink-soft:#5B544A;
+    --gold:#C9A961;
+    --gold-deep:#B08C3F;
+    --gold-bright:#D4AF37;
+    --rule:rgba(42,38,32,0.12);
+    --rule-on-dark:rgba(212,175,55,0.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#0d0a06;color:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  html{overflow-x:hidden}
+  body{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400}
+  html{scroll-behavior:smooth}
+
+  /* ——— Persistent chrome ——— */
+  .brand-bar{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px clamp(20px,4vw,52px);
+    pointer-events:none;
+    mix-blend-mode:normal;
+  }
+  .brand-bar > *{pointer-events:auto}
+  .brand{
+    display:flex; align-items:center; gap:14px;
+    color:var(--bg);
+    text-shadow:0 1px 12px rgba(0,0,0,.5);
+  }
+  .brand .mono{
+    font-family:'Cinzel',serif; font-weight:600;
+    font-size:13px; letter-spacing:0.42em; text-transform:uppercase;
+    color:var(--gold-bright);
+  }
+  .brand .sub{
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:10px; letter-spacing:0.34em; text-transform:uppercase;
+    color:rgba(250,250,245,.72);
+    margin-top:3px;
+  }
+  .brand-rule{width:36px;height:1px;background:var(--gold);opacity:.7;margin:0 4px}
+
+  .controls-cluster{
+    display:flex; align-items:center; gap:10px;
+    transition:opacity 600ms ease-out, transform 600ms ease-out;
+  }
+  .rail{transition:opacity 600ms ease-out, transform 600ms ease-out}
+  body.idle .controls-cluster{opacity:0; transform:translateY(-6px); pointer-events:none}
+  body.idle .rail{opacity:0; transform:translate(8px,-50%); pointer-events:none}
+  .ctl-btn{
+    background:rgba(13,10,6,.45);
+    border:1px solid var(--rule-on-dark);
+    color:var(--bg);
+    width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    transition:border-color 320ms ease-out, background 320ms ease-out, color 320ms ease-out;
+    border-radius:1px;
+  }
+  .ctl-btn:hover{border-color:var(--gold-bright);color:var(--gold-bright);background:rgba(13,10,6,.7)}
+  .ctl-btn svg{width:16px;height:16px;display:block}
+  .ctl-label{
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:10px; letter-spacing:0.32em; text-transform:uppercase;
+    color:rgba(250,250,245,.72);
+    margin-right:6px;
+  }
+
+  /* ——— Side rail (pagination) ——— */
+  .rail{
+    position:fixed; top:50%; right:clamp(16px,2.4vw,32px);
+    transform:translateY(-50%);
+    z-index:40;
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .rail .seg{
+    position:relative;
+    display:flex; align-items:center; gap:12px;
+    color:rgba(250,250,245,.55);
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:10px; letter-spacing:0.28em; text-transform:uppercase;
+    cursor:pointer;
+    transition:color 400ms ease-out;
+  }
+  .rail .seg .num{
+    font-family:'Cinzel',serif; font-weight:500;
+    letter-spacing:0.16em; font-size:11px;
+    width:22px; text-align:right;
+    color:rgba(250,250,245,.55);
+    transition:color 400ms ease-out;
+  }
+  .rail .seg .bar{
+    width:38px; height:1px; background:rgba(250,250,245,.28);
+    position:relative; overflow:hidden;
+    transition:background 400ms ease-out;
+  }
+  .rail .seg .bar::after{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:0;
+    background:var(--gold-bright);
+    transition:width 220ms linear;
+  }
+  .rail .seg.is-active{color:var(--gold-bright)}
+  .rail .seg.is-active .num{color:var(--gold-bright)}
+  .rail .seg.is-active .bar{background:rgba(212,175,55,.25)}
+  .rail .seg.is-played .num{color:rgba(250,250,245,.85)}
+  .rail .seg.is-played .bar{background:rgba(212,175,55,.5)}
+  .rail .seg.is-played .bar::after{width:100%}
+
+  /* ——— Section / video ——— */
+  .v{
+    position:relative;
+    height:100svh;
+    width:100vw;
+    overflow:hidden;
+    display:flex; align-items:flex-end;
+  }
+  .v video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    z-index:1;
+    background:#0d0a06;
+  }
+  .v .vignette{
+    position:absolute; inset:0; z-index:2;
+    background:
+      linear-gradient(180deg, rgba(13,10,6,.45) 0%, rgba(13,10,6,0) 28%, rgba(13,10,6,0) 55%, rgba(13,10,6,.85) 100%),
+      radial-gradient(ellipse at 50% 50%, rgba(13,10,6,0) 35%, rgba(13,10,6,.55) 100%);
+    pointer-events:none;
+  }
+  .v .pad{
+    position:relative; z-index:3;
+    width:100%;
+    padding: 0 clamp(28px,6vw,96px) clamp(64px,9vh,128px);
+    display:flex; flex-direction:column; gap:clamp(14px,2vh,26px);
+    color:var(--bg);
+  }
+
+  .ornament{
+    display:flex; align-items:center; gap:14px;
+    color:var(--gold-bright);
+  }
+  .ornament .line{width:clamp(40px,5vw,72px); height:1px; background:currentColor; opacity:.8}
+  .ornament .dot{width:5px;height:5px;border:1px solid currentColor;transform:rotate(45deg);opacity:.95}
+
+  .eyebrow{
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:11px; letter-spacing:0.42em; text-transform:uppercase;
+    color:var(--gold-bright);
+    display:flex; align-items:center; gap:14px;
+  }
+  .eyebrow .index{
+    font-family:'Cinzel',serif; font-weight:600;
+    letter-spacing:0.18em;
+    color:rgba(250,250,245,.85);
+  }
+
+  .v h1{
+    font-family:'Cinzel',serif; font-weight:500;
+    font-size:clamp(38px,5.6vw,92px);
+    line-height:1.06; letter-spacing:0.025em;
+    margin:0;
+    color:var(--bg);
+    text-wrap:pretty;
+    max-width:min(1100px, 88vw);
+    text-shadow:0 2px 24px rgba(0,0,0,.6);
+  }
+  .v h1 em{
+    font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:400;
+    color:var(--gold-bright);
+  }
+
+  .meta{
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px 26px;
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:clamp(17px,1.5vw,24px);
+    color:rgba(250,250,245,.86);
+    max-width:min(900px,86vw);
+  }
+  .meta .when{
+    font-family:'Lato',sans-serif; font-style:normal; font-weight:300;
+    font-size:11px; letter-spacing:0.34em; text-transform:uppercase;
+    color:rgba(250,250,245,.72);
+    padding:6px 12px;
+    border:1px solid var(--rule-on-dark);
+    border-radius:1px;
+    backdrop-filter:blur(6px);
+  }
+  .meta .where{ }
+
+  /* progress bar at bottom of section */
+  .v .progress{
+    position:absolute; left:0; right:0; bottom:0; z-index:4;
+    height:2px; background:rgba(250,250,245,.08);
+  }
+  .v .progress .fill{
+    height:100%; background:var(--gold-bright);
+    width:0%;
+    transition:width 180ms linear;
+    box-shadow:0 0 14px rgba(212,175,55,.55);
+  }
+
+  /* corner runtime */
+  .v .runtime{
+    position:absolute; top:clamp(14px,2.2vh,28px); right:clamp(20px,4vw,52px);
+    z-index:30;
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:11px; letter-spacing:0.32em; text-transform:uppercase;
+    color:rgba(250,250,245,.78);
+    background:rgba(13,10,6,.4);
+    border:1px solid var(--rule-on-dark);
+    backdrop-filter:blur(8px);
+    padding:6px 12px;
+    pointer-events:none;
+    display:none; /* hidden — rail acts as primary indicator */
+  }
+
+  /* ——— Intro ——— */
+  .intro{
+    position:relative; height:100svh; width:100vw;
+    background:#0d0a06;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    overflow:hidden;
+  }
+  .intro::before{
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(212,175,55,.16), rgba(13,10,6,0) 60%),
+      linear-gradient(180deg, #110d07 0%, #0d0a06 100%);
+  }
+  .intro-inner{position:relative; z-index:2; padding:0 6vw}
+  .intro .eyebrow-mark{
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:11px; letter-spacing:0.42em; text-transform:uppercase;
+    color:var(--gold-bright);
+    margin-bottom:clamp(28px,4vh,56px);
+  }
+  .intro h2{
+    font-family:'Cinzel',serif; font-weight:500;
+    font-size:clamp(44px,7.2vw,124px);
+    line-height:1.1; letter-spacing:0.04em;
+    margin:0; color:var(--bg);
+  }
+  .intro h2 .tail{
+    display:block; margin-top:.18em;
+    color:var(--gold-bright);
+  }
+  .intro .tagline{
+    margin-top:clamp(28px,4vh,52px);
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    font-size:clamp(18px,1.8vw,28px);
+    color:rgba(250,250,245,.78);
+    letter-spacing:0.02em;
+  }
+  .intro .underline{
+    margin:clamp(34px,5vh,60px) auto 0;
+    width:min(220px,40vw); height:1px;
+    background:linear-gradient(to right, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
+  }
+  .intro .scroll-hint{
+    position:absolute; left:0; right:0; bottom:5vh;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    color:var(--gold);
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:10px; letter-spacing:0.42em; text-transform:uppercase;
+  }
+  .intro .scroll-hint .chev{
+    width:1px; height:42px;
+    background:linear-gradient(to bottom, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+    position:relative;
+  }
+  .intro .scroll-hint .chev::after{
+    content:''; position:absolute; left:50%; bottom:0;
+    width:8px; height:8px;
+    border-right:1px solid var(--gold); border-bottom:1px solid var(--gold);
+    transform:translateX(-50%) rotate(45deg);
+    animation:drift 2.4s ease-in-out infinite;
+  }
+  @keyframes drift{
+    0%,100%{transform:translate(-50%,0) rotate(45deg);opacity:.4}
+    50%{transform:translate(-50%,8px) rotate(45deg);opacity:1}
+  }
+
+  /* Unmute affordance */
+  .audio-pill{
+    position:fixed; left:50%; bottom:clamp(22px,4vh,40px);
+    transform:translateX(-50%);
+    z-index:60;
+    display:none; align-items:center; gap:10px;
+    padding:10px 16px;
+    background:rgba(13,10,6,.6);
+    border:1px solid var(--rule-on-dark);
+    backdrop-filter:blur(10px);
+    color:var(--bg);
+    font-family:'Lato',sans-serif; font-weight:300;
+    font-size:11px; letter-spacing:0.32em; text-transform:uppercase;
+    cursor:pointer;
+    transition:border-color 320ms ease-out, color 320ms ease-out;
+  }
+  .audio-pill.show{display:inline-flex;animation:pillIn 600ms ease-out}
+  .audio-pill:hover{border-color:var(--gold-bright);color:var(--gold-bright)}
+  .audio-pill svg{width:14px;height:14px}
+  @keyframes pillIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  /* ——— Tweaks ——— */
+  #tweaks{
+    position:fixed; right:22px; bottom:22px; z-index:9999;
+    width:312px;
+    background:rgba(250,250,245,0.96);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--rule);
+    color:var(--ink);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+    font-family:'Lato',system-ui,sans-serif;
+    display:none;
+  }
+  #tweaks.open{display:block;animation:tweakIn 420ms ease-out}
+  @keyframes tweakIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  #tweaks .hd{padding:14px 16px 12px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between}
+  #tweaks .title{font-family:'Cinzel',serif; font-weight:500; font-size:12px; letter-spacing:0.32em; text-transform:uppercase; color:var(--gold-deep)}
+  #tweaks .sub{font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-soft); font-weight:300; margin-top:2px}
+  #tweaks .body{padding:6px 16px 16px}
+  #tweaks .row{padding:12px 0; border-bottom:1px solid rgba(42,38,32,0.06)}
+  #tweaks .row:last-child{border-bottom:0}
+  #tweaks .lbl{display:flex; justify-content:space-between; align-items:baseline; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink); font-weight:700}
+  #tweaks .lbl .val{font-family:'Cinzel',serif; font-weight:500; letter-spacing:0.08em; color:var(--gold-deep); font-size:12px}
+  .seg-ctl{display:grid; grid-auto-flow:column; grid-auto-columns:1fr; margin-top:8px; border:1px solid var(--rule)}
+  .seg-ctl button{
+    background:transparent; border:0; padding:9px 8px; cursor:pointer;
+    font-family:'Lato',sans-serif; font-weight:700; font-size:10px;
+    letter-spacing:0.28em; text-transform:uppercase; color:var(--ink-soft);
+    border-right:1px solid var(--rule);
+    transition:background 240ms ease-out, color 240ms ease-out;
+  }
+  .seg-ctl button:last-child{border-right:0}
+  .seg-ctl button.is-on{background:rgba(201,169,97,.16); color:var(--gold-deep)}
+  #tweaks .hint{font-size:10px; color:var(--ink-soft); font-weight:300; margin-top:8px; letter-spacing:0.04em; line-height:1.45; font-style:italic; font-family:'Cormorant Garamond',serif; font-size:13px}
+
+  /* ——— Prelude section ——— */
+  .prelude{position:relative; min-height:100svh; width:100vw; background:#0d0a06; color:var(--bg); display:flex; align-items:center; justify-content:center; padding:clamp(80px,12vh,140px) clamp(28px,6vw,96px); overflow:hidden}
+  .prelude::before{content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 25% 50%, rgba(212,175,55,.10), rgba(13,10,6,0) 60%), linear-gradient(180deg, #100c07 0%, #0d0a06 100%); pointer-events:none}
+  .prelude-inner{position:relative; z-index:2; width:100%; max-width:1320px; display:grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap:clamp(40px,6vw,96px); align-items:center}
+  .poster{margin:0; position:relative; aspect-ratio:3/4; background:repeating-linear-gradient(135deg, rgba(201,169,97,0.12) 0 2px, rgba(13,10,6,0) 2px 14px), linear-gradient(180deg, #2a2014 0%, #1a130a 100%); border:1px solid var(--rule-on-dark); box-shadow:0 30px 80px -30px rgba(0,0,0,.6), inset 0 0 0 1px rgba(212,175,55,0.05); display:flex; align-items:flex-end; overflow:hidden}
+  .poster-stripes{position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(212,175,55,.20), rgba(13,10,6,0) 55%); pointer-events:none}
+  .poster-meta{position:relative; z-index:1; width:100%; padding:clamp(24px,3vw,40px); display:flex; flex-direction:column; gap:clamp(10px,1.4vw,18px)}
+  .poster-rule{width:46px; height:1px; background:var(--gold-bright)}
+  .poster-eyebrow{font-family:'Cinzel',serif; font-weight:500; font-size:clamp(13px,1.1vw,17px); letter-spacing:0.32em; text-transform:uppercase; color:var(--gold-bright); line-height:1.5}
+  .poster-title{font-family:'Cinzel',serif; font-weight:600; font-size:clamp(72px,10vw,168px); line-height:0.92; letter-spacing:0.02em; color:var(--bg); margin-top:clamp(6px,1vw,12px)}
+  .poster-foot{margin-top:clamp(14px,1.6vw,22px); font-family:'Lato',sans-serif; font-weight:300; font-size:10px; letter-spacing:0.34em; text-transform:uppercase; color:rgba(250,250,245,.55); border-top:1px solid var(--rule-on-dark); padding-top:clamp(12px,1.4vw,18px)}
+  .prelude-eyebrow{font-family:'Lato',sans-serif; font-weight:300; font-size:11px; letter-spacing:0.42em; text-transform:uppercase; color:var(--gold-bright); margin-bottom:clamp(20px,2.4vh,32px)}
+  .fade-words{margin:0; font-family:'Cormorant Garamond',Georgia,serif; font-weight:400; font-size:clamp(20px,2.2vw,34px); line-height:1.55; color:rgba(250,250,245,.92); text-wrap:pretty; letter-spacing:0.005em}
+  .fade-words .w{display:inline-block; opacity:0; filter:blur(6px); transform:translateY(4px); transition:opacity 1100ms ease-out, filter 1100ms ease-out, transform 1100ms ease-out}
+  .fade-words.go .w{opacity:1; filter:blur(0); transform:translateY(0)}
+  @media (max-width:860px){.prelude-inner{grid-template-columns:1fr; gap:36px} .poster{max-width:420px; margin:0 auto}}
+
+  /* Responsive */
+  @media (max-width: 720px){
+    .rail{display:none}
+    .v .pad{padding:0 24px 80px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ——— Persistent brand bar ——— -->
+<div class="brand-bar">
+  <div class="brand">
+    <div>
+      <div class="mono">Soli Deo Choir</div>
+      <div class="sub">HKBP SERPONG</div>
+    </div>
+  </div>
+  <div class="controls-cluster">
+    <span class="ctl-label" id="now-playing">Reel I &middot; of V</span>
+    <button class="ctl-btn" id="btn-mute" aria-label="Toggle sound" title="Toggle sound">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" id="ic-muted">
+        <path d="M11 5 6 9H2v6h4l5 4z"/>
+        <line x1="22" y1="9" x2="16" y2="15"/>
+        <line x1="16" y1="9" x2="22" y2="15"/>
+      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" id="ic-sound" style="display:none">
+        <path d="M11 5 6 9H2v6h4l5 4z"/>
+        <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+        <path d="M19 5a9 9 0 0 1 0 14"/>
+      </svg>
+    </button>
+    <button class="ctl-btn" id="btn-pause" aria-label="Pause/play" title="Pause/play">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" id="ic-pause">
+        <line x1="9" y1="5" x2="9" y2="19"/>
+        <line x1="15" y1="5" x2="15" y2="19"/>
+      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" id="ic-play" style="display:none">
+        <polygon points="6 4 20 12 6 20 6 4"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ——— Side rail ——— -->
+<nav class="rail" id="rail" aria-label="Performance index"></nav>
+
+<!-- ——— Intro ——— -->
+<section class="intro" id="intro" aria-label="Title">
+  <div class="intro-inner">
+    <div class="eyebrow-mark">— KUMPULAN PUJIAN —</div>
+    <h2>Soli Deo Choir
+<span class="tail" style="font-family: 'Cormorant Garamond'; font-size: 36px;">menuju<br><span style="font-family: 'Cinzel', serif;">Penabur International Choir Festival 2026</span></span></h2>
+    <div class="tagline" style="font-family: Cinzel">
+</div>
+    <div class="underline"></div>
+  </div>
+  <div class="scroll-hint">
+    <span>Begin</span>
+    <span class="chev"></span>
+  </div>
+</section>
+
+<!-- ——— Prelude: poster + paragraph (word-by-word fade) ——— -->
+<section class="prelude" id="prelude" aria-label="Prelude" data-screen-label="00 Prelude">
+  <div class="prelude-inner">
+    <figure class="poster" aria-label="Festival poster">
+      <div class="poster-stripes"></div>
+      <div class="poster-meta">
+        <div class="poster-rule"></div>
+        <div class="poster-eyebrow">Penabur International<br>Choir Festival</div>
+        <div class="poster-title">2026</div>
+        <div class="poster-foot">Drop your poster artwork here</div>
+      </div>
+    </figure>
+
+    <div class="prelude-text">
+      <div class="prelude-eyebrow">— Sebuah Perjalanan —</div>
+      <p class="fade-words" id="prelude-paragraph">Pada penghujung tahun 2026, Soli Deo Choir HKBP Serpong akan berdiri di panggung Penabur International Choir Festival—sebuah perjalanan yang berawal dari latihan sederhana di sakristi gereja, kini bertumbuh menjadi kesaksian iman yang dibawa hingga panggung dunia. Setiap nada yang kami lantunkan, kami persembahkan hanya bagi Allah, sumber dari segala suara dan sukacita.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ——— Performance sections ——— -->
+<!-- Each .v section is rendered from PERFORMANCES below. -->
+<main id="reel"></main>
+
+<!-- ——— Audio pill ——— -->
+<button class="audio-pill" id="audio-pill" aria-label="Enable sound">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 5 6 9H2v6h4l5 4z"/>
+    <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+    <path d="M19 5a9 9 0 0 1 0 14"/>
+  </svg>
+  Tap for sound
+</button>
+
+<!-- ——— Tweaks panel ——— -->
+<aside id="tweaks" aria-label="Tweaks">
+  <div class="hd">
+    <div>
+      <div class="title">Tweaks</div>
+      <div class="sub">Playback &middot; Reel</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="row">
+      <div class="lbl"><span>Sound</span><span class="val" id="sound-val">Muted</span></div>
+      <div class="seg-ctl" id="seg-sound">
+        <button data-v="0" class="is-on">Muted</button>
+        <button data-v="1">Audible</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl"><span>Auto-advance</span><span class="val" id="adv-val">On</span></div>
+      <div class="seg-ctl" id="seg-adv">
+        <button data-v="1" class="is-on">On</button>
+        <button data-v="0">Off</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl"><span>Loop reel</span><span class="val" id="loop-val">On</span></div>
+      <div class="seg-ctl" id="seg-loop">
+        <button data-v="1" class="is-on">On</button>
+        <button data-v="0">Stop at last</button>
+      </div>
+    </div>
+    <div class="hint">Replace the <code>src</code> values in <code>PERFORMANCES</code> with your own MP4s. Sample clips are placeholders.</div>
+  </div>
+</aside>
+
+<script>
+  // ——— Replace these src URLs with your own performance MP4s ———
+  const PERFORMANCES = [
+    {
+      title: 'Cantate <em>Domino</em>',
+      where: 'Gereja HKBP Serpong',
+      when:  'Misa Malam Natal &middot; 24 Desember 2023',
+      src:   'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+      poster:''
+    },
+    {
+      title: 'Lux <em>Aeterna</em>',
+      where: 'Katedral Bandung',
+      when:  'Konser Tahunan &middot; 17 Mei 2024',
+      src:   'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
+      poster:''
+    },
+    {
+      title: 'Vespers for <em>the Feast</em>',
+      where: 'Aula Simfonia Jakarta',
+      when:  'Konser Musim Panen &middot; 09 November 2024',
+      src:   'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
+      poster:''
+    },
+    {
+      title: 'O <em>Magnum</em> Mysterium',
+      where: 'Bali International Choir Festival',
+      when:  'Kompetisi Internasional &middot; 27 Juli 2025',
+      src:   'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+      poster:''
+    },
+    {
+      title: 'Hallelujah, <em>Amen</em>',
+      where: 'Gereja HKBP Serpong',
+      when:  'Konser Paskah &middot; 05 April 2026',
+      src:   'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_2MB.mp4',
+      poster:''
+    }
+  ];
+
+  const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+  const reel = document.getElementById('reel');
+  const rail = document.getElementById('rail');
+
+  // Build sections
+  PERFORMANCES.forEach((p, i) => {
+    const s = document.createElement('section');
+    s.className = 'v';
+    s.id = 'v' + i;
+    s.setAttribute('data-screen-label', String(i+1).padStart(2,'0') + ' ' + p.title.replace(/<[^>]+>/g,''));
+    s.innerHTML = `
+      <video data-i="${i}" muted playsinline preload="metadata" ${p.poster ? `poster="${p.poster}"` : ''}>
+        <source src="${p.src}" type="video/mp4">
+      </video>
+      <div class="vignette"></div>
+      <div class="pad">
+        <div class="eyebrow">
+          <span class="ornament-mini"></span>
+          <span class="index">${ROMAN[i]} &middot; of &middot; ${ROMAN[PERFORMANCES.length-1]}</span>
+          <span style="opacity:.7">Performance</span>
+        </div>
+        <h1>${p.title}</h1>
+        <div class="meta">
+          <span class="when">${p.when}</span>
+          <span class="where">${p.where}</span>
+        </div>
+        <div class="ornament" style="margin-top:6px"><span class="line"></span><span class="dot"></span></div>
+      </div>
+      <div class="progress"><div class="fill" data-fill="${i}"></div></div>
+    `;
+    reel.appendChild(s);
+
+    // Rail entry
+    const seg = document.createElement('a');
+    seg.className = 'seg';
+    seg.href = '#v' + i;
+    seg.dataset.i = i;
+    seg.innerHTML = `<span class="bar"></span><span class="num">${ROMAN[i]}</span>`;
+    seg.addEventListener('click', (ev) => { ev.preventDefault(); scrollTo(i); });
+    rail.appendChild(seg);
+  });
+
+  const videos = [...document.querySelectorAll('.v video')];
+  const sections = [...document.querySelectorAll('.v')];
+  const railSegs = [...rail.querySelectorAll('.seg')];
+  const fills = [...document.querySelectorAll('.progress .fill')];
+
+  // ——— State ———
+  const state = {
+    activeIndex: -1,
+    muted: true,
+    autoAdvance: true,
+    loop: true,
+    paused: false,
+    playStartedAt: 0,
+  };
+
+  // ——— Helpers ———
+  function scrollTo(i){
+    const target = sections[i];
+    if (!target) return;
+    const top = target.offsetTop;
+    // Use scrollingElement to be robust against any axis-hidden overflow quirk
+    const el = document.scrollingElement || document.documentElement;
+    if (el && el.scrollTo) el.scrollTo({top, behavior:'smooth'});
+    else window.scrollTo({top, behavior:'smooth'});
+  }
+  function scrollToTop(){
+    const el = document.scrollingElement || document.documentElement;
+    if (el && el.scrollTo) el.scrollTo({top:0, behavior:'smooth'});
+    else window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function loopBackAndRestart(){
+    scrollToTop();
+    setTimeout(() => {
+      if (preludeEl) {
+        const el = document.scrollingElement || document.documentElement;
+        el.scrollTo({top: preludeEl.offsetTop, behavior:'smooth'});
+      } else {
+        scrollTo(0);
+      }
+    }, 5000);
+  }
+
+  function applyMute(){
+    videos.forEach(v => v.muted = state.muted);
+    document.getElementById('ic-muted').style.display = state.muted ? '' : 'none';
+    document.getElementById('ic-sound').style.display = state.muted ? 'none' : '';
+    document.getElementById('sound-val').textContent = state.muted ? 'Muted' : 'Audible';
+    setSeg('seg-sound', state.muted ? 0 : 1);
+    if (!state.muted) document.getElementById('audio-pill').classList.remove('show');
+  }
+  function applyPaused(){
+    document.getElementById('ic-pause').style.display = state.paused ? 'none' : '';
+    document.getElementById('ic-play').style.display  = state.paused ? '' : 'none';
+    if (state.activeIndex >= 0){
+      const v = videos[state.activeIndex];
+      if (state.paused) v.pause(); else playSafe(v);
+    }
+  }
+  function setSeg(id, v){
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    [...wrap.children].forEach(b => b.classList.toggle('is-on', +b.dataset.v === v));
+  }
+
+  function playSafe(v){
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {
+      // Autoplay blocked — surface the audio pill so the user can opt-in
+      if (!state.muted) {
+        // try again muted
+        state.muted = true;
+        applyMute();
+        v.play().catch(()=>{});
+      }
+      document.getElementById('audio-pill').classList.add('show');
+    });
+  }
+
+  function setActive(i){
+    if (i === state.activeIndex) return;
+    state.activeIndex = i;
+    state.playStartedAt = Date.now();
+    videos.forEach((v, idx) => {
+      if (idx === i){
+        try { v.currentTime = 0; } catch(e){}
+        v.preload = 'auto';
+        if (!state.paused) playSafe(v);
+      } else {
+        v.pause();
+        try { v.currentTime = 0; } catch(e){}
+      }
+    });
+    railSegs.forEach((seg, idx) => {
+      seg.classList.toggle('is-active', idx === i);
+      seg.classList.toggle('is-played', idx < i);
+    });
+    fills.forEach((f, idx) => { if (idx !== i) f.style.width = '0%'; });
+    document.getElementById('now-playing').innerHTML =
+      'Reel ' + ROMAN[i] + ' &middot; of ' + ROMAN[PERFORMANCES.length-1];
+  }
+  function clearActive(){
+    state.activeIndex = -1;
+    videos.forEach(v => v.pause());
+    railSegs.forEach(seg => seg.classList.remove('is-active'));
+  }
+
+  // ——— Section observer ———
+  // Use scroll position so we know which section is most centered.
+  let scrollRaf = 0;
+  function evalActive(){
+    const center = window.scrollY + window.innerHeight * 0.5;
+    const firstVTop = sections[0] ? sections[0].offsetTop : Infinity;
+    if (center < firstVTop){
+      clearActive();
+      return;
+    }
+    let best = 0, bestDist = Infinity;
+    sections.forEach((s, i) => {
+      const c = s.offsetTop + s.offsetHeight/2;
+      const d = Math.abs(c - center);
+      if (d < bestDist){ bestDist = d; best = i; }
+    });
+    setActive(best);
+  }
+  window.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; evalActive(); });
+  }, {passive:true});
+
+  // ——— Per-video events ———
+  videos.forEach((v, i) => {
+    v.addEventListener('timeupdate', () => {
+      if (i !== state.activeIndex) return;
+      const d = v.duration || 0;
+      const pct = d ? (v.currentTime / d) * 100 : 0;
+      fills[i].style.width = pct + '%';
+    });
+    v.addEventListener('ended', () => {
+      if (i !== state.activeIndex) return;
+      fills[i].style.width = '100%';
+      if (!state.autoAdvance) return;
+      const next = i + 1;
+      if (next < PERFORMANCES.length){
+        scrollTo(next);
+      } else if (state.loop){
+        setTimeout(loopBackAndRestart, 600);
+      }
+    });
+    v.addEventListener('error', () => {
+      // Skip past broken sources after a brief delay so the reel keeps moving
+      if (i !== state.activeIndex) return;
+      setTimeout(() => {
+        if (i !== state.activeIndex) return;
+        if (state.autoAdvance){
+          const next = i + 1;
+          if (next < PERFORMANCES.length) scrollTo(next);
+          else if (state.loop) loopBackAndRestart();
+        }
+      }, 1500);
+    });
+  });
+
+  // ——— Controls ———
+  document.getElementById('btn-mute').addEventListener('click', () => {
+    state.muted = !state.muted; applyMute();
+    if (!state.muted && state.activeIndex >= 0) playSafe(videos[state.activeIndex]);
+  });
+  document.getElementById('btn-pause').addEventListener('click', () => {
+    state.paused = !state.paused; applyPaused();
+  });
+  document.getElementById('audio-pill').addEventListener('click', () => {
+    state.muted = false; applyMute();
+    if (state.activeIndex >= 0) playSafe(videos[state.activeIndex]);
+  });
+
+  // Tweaks
+  function wireSeg(id, fn){
+    const wrap = document.getElementById(id);
+    wrap.addEventListener('click', (ev) => {
+      const b = ev.target.closest('button'); if (!b) return;
+      [...wrap.children].forEach(x => x.classList.remove('is-on'));
+      b.classList.add('is-on');
+      fn(+b.dataset.v);
+    });
+  }
+  wireSeg('seg-sound', v => { state.muted = !v; applyMute(); if (state.activeIndex>=0) playSafe(videos[state.activeIndex]); });
+  wireSeg('seg-adv',   v => { state.autoAdvance = !!v; document.getElementById('adv-val').textContent = v?'On':'Off'; });
+  wireSeg('seg-loop',  v => { state.loop = !!v; document.getElementById('loop-val').textContent = v?'On':'Stop at last'; });
+
+  // Edit-mode protocol
+  window.addEventListener('message', (ev) => {
+    const d = ev.data || {};
+    if (d.type === '__activate_edit_mode')   document.getElementById('tweaks').classList.add('open');
+    if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('open');
+  });
+  try { window.parent.postMessage({type:'__edit_mode_available'}, '*'); } catch(e){}
+
+  // Keyboard nav
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown'){
+      e.preventDefault();
+      const i = state.activeIndex < 0 ? 0 : Math.min(state.activeIndex + 1, PERFORMANCES.length - 1);
+      scrollTo(i);
+    }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp'){
+      e.preventDefault();
+      if (state.activeIndex <= 0) scrollToTop();
+      else scrollTo(state.activeIndex - 1);
+    }
+    if (e.key === ' ') { e.preventDefault(); state.paused = !state.paused; applyPaused(); }
+    if (e.key.toLowerCase() === 'm') { state.muted = !state.muted; applyMute(); if (state.activeIndex>=0) playSafe(videos[state.activeIndex]); }
+  });
+
+  // Initial state
+  applyMute();
+
+  // ——— Prelude: word-by-word fade + auto-advance ———
+  const preludeEl = document.getElementById('prelude');
+  const paragraphEl = document.getElementById('prelude-paragraph');
+  if (paragraphEl){
+    const text = paragraphEl.textContent.trim();
+    paragraphEl.textContent = '';
+    const words = text.split(/(\s+)/);
+    words.forEach((tok, idx) => {
+      if (/^\s+$/.test(tok)){
+        paragraphEl.appendChild(document.createTextNode(tok));
+      } else if (tok.length){
+        const span = document.createElement('span');
+        span.className = 'w';
+        span.textContent = tok;
+        span.style.transitionDelay = (idx * 60) + 'ms';
+        paragraphEl.appendChild(span);
+      }
+    });
+  }
+  let preludeStarted = false;
+  let preludeAdvanceTimer = 0;
+  function startPreludeReveal(){
+    if (preludeStarted) return;
+    preludeStarted = true;
+    paragraphEl && paragraphEl.classList.add('go');
+    const totalWords = paragraphEl ? paragraphEl.querySelectorAll('.w').length : 0;
+    const revealMs = 20000;
+    clearTimeout(preludeAdvanceTimer);
+    preludeAdvanceTimer = setTimeout(() => {
+      if (state.autoAdvance) scrollTo(0);
+    }, revealMs);
+  }
+  function resetPrelude(){
+    preludeStarted = false;
+    paragraphEl && paragraphEl.classList.remove('go');
+    clearTimeout(preludeAdvanceTimer);
+  }
+  if (preludeEl){
+    const pio = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio > 0.45){
+          startPreludeReveal();
+        } else if (e.intersectionRatio < 0.05){
+          resetPrelude();
+        }
+      });
+    }, {threshold:[0, 0.05, 0.45, 0.7]});
+    pio.observe(preludeEl);
+  }
+
+  // ——— Idle fade for top-right controls + side rail ———
+  let idleTimer = 0;
+  function nudgeIdle(){
+    document.body.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => document.body.classList.add('idle'), 3000);
+  }
+  ['mousemove','mousedown','touchstart','keydown','wheel'].forEach(ev =>
+    window.addEventListener(ev, nudgeIdle, {passive:true})
+  );
+  nudgeIdle();
+  // Evaluate once after layout settles
+  setTimeout(evalActive, 80);
+
+  // ——— Auto-advance from intro to first video after a brief beat ———
+  // (so the reel begins on its own — no manual scroll needed)
+  let introDismissed = false;
+  function maybeAutoStart(){
+    if (introDismissed) return;
+    if (window.scrollY > 12) { introDismissed = true; return; }
+    introDismissed = true;
+    if (preludeEl) {
+      const el = document.scrollingElement || document.documentElement;
+      el.scrollTo({top: preludeEl.offsetTop, behavior:'smooth'});
+    } else {
+      scrollTo(0);
+    }
+  }
+  // Cancel auto-start if user scrolls themselves
+  window.addEventListener('scroll', () => { if (!introDismissed && window.scrollY > 12) introDismissed = true; }, {passive:true, once:false});
+  setTimeout(maybeAutoStart, 4200);
+
+  // ——— Watchdog: force-advance if `ended` doesn't fire ———
+  // Combines two checks:
+  //  (a) currentTime has reached duration (normal end)
+  //  (b) wall-clock elapsed exceeds duration + 2s grace (covers silent stalls,
+  //      blocked autoplay, missing `ended` events)
+  setInterval(() => {
+    const i = state.activeIndex;
+    if (i < 0 || state.paused || !state.autoAdvance) return;
+    const v = videos[i];
+    if (!v) return;
+
+    // Try to keep the active video playing (in case it was silently paused)
+    if (!state.paused && v.paused && v.readyState >= 2) {
+      playSafe(v);
+    }
+
+    const dur = (v.duration && !isNaN(v.duration)) ? v.duration : 11; // fallback
+    const past = v.currentTime >= dur - 0.1;
+    const elapsed = (Date.now() - state.playStartedAt) / 1000;
+    const exceeded = elapsed > dur + 2;
+
+    if (past || exceeded){
+      fills[i].style.width = '100%';
+      state.playStartedAt = Date.now() + 99999; // prevent re-fire
+      const next = i + 1;
+      if (next < PERFORMANCES.length) scrollTo(next);
+      else if (state.loop) setTimeout(loopBackAndRestart, 600);
+    }
+  }, 600);
+</script>
+</body>
+</html>
