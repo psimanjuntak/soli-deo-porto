@@ -647,8 +647,10 @@
       if (!state.muted) {
         v.muted = true;
         v.play().catch(()=>{});
+      } else {
+        // User hasn't opted in yet — surface the pill so they can
+        document.getElementById('audio-pill').classList.add('show');
       }
-      document.getElementById('audio-pill').classList.add('show');
     });
   }
 
