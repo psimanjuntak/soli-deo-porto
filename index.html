@@ -643,14 +643,14 @@
   function playSafe(v){
     const p = v.play();
     if (p && p.catch) p.catch(() => {
-      // Autoplay blocked — surface the audio pill so the user can opt-in
+      // Autoplay blocked — play muted without changing the user's audio preference
       if (!state.muted) {
-        // try again muted
-        state.muted = true;
-        applyMute();
+        v.muted = true;
         v.play().catch(()=>{});
+      } else {
+        // User hasn't opted in yet — surface the pill so they can
+        document.getElementById('audio-pill').classList.add('show');
       }
-      document.getElementById('audio-pill').classList.add('show');
     });
   }
 
