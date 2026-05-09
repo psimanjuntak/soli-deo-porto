@@ -801,7 +801,7 @@
         const span = document.createElement('span');
         span.className = 'w';
         span.textContent = tok;
-        span.style.transitionDelay = (baseDelay + wordIdx * 350) + 'ms';
+        span.style.transitionDelay = (baseDelay + wordIdx * 200) + 'ms';
         el.appendChild(span);
         wordIdx++;
       }
@@ -812,8 +812,8 @@
   const paragraphEl2 = document.getElementById('prelude-paragraph-2');
   const paragraphEl3 = document.getElementById('prelude-paragraph-3');
   let delay = 0;
-  delay += wrapWords(paragraphEl, delay) * 350 + 1800;
-  delay += wrapWords(paragraphEl2, delay) * 350 + 1800;
+  delay += wrapWords(paragraphEl, delay) * 200 + 1200;
+  delay += wrapWords(paragraphEl2, delay) * 200 + 1200;
   wrapWords(paragraphEl3, delay);
   let preludeStarted = false;
   let preludeAdvanceTimer = 0;
@@ -824,7 +824,7 @@
     clearTimeout(preludeAdvanceTimer);
     preludeAdvanceTimer = setTimeout(() => {
       if (state.autoAdvance) scrollTo(0);
-    }, 70000);
+    }, 45000);
   }
   function resetPrelude(){
     preludeStarted = false;
