@@ -202,6 +202,14 @@
   }
   .meta .where{ }
 
+  .composer{
+    font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:400;
+    font-size:clamp(16px,1.4vw,22px);
+    color:var(--gold-bright);
+    margin-bottom:4px;
+    letter-spacing:0.04em;
+  }
+
   /* progress bar at bottom of section */
   .v .progress{
     position:absolute; left:0; right:0; bottom:0; z-index:4;
@@ -500,25 +508,28 @@
       poster:''
     },
     {
-      title: 'Lux <em>Aeterna</em>',
-      where: 'Katedral Bandung',
-      when:  'Konser Tahunan &middot; 17 Mei 2024',
-      src:   'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-      poster:''
+      title:    'Dies Irae',
+      composer: 'Michael John Trotta',
+      where:    'ISI Yogyakarta',
+      when:     'Festival Swara Saraswati 2025',
+      src:      'videos/dies-irae.mp4',
+      poster:   ''
     },
     {
-      title: 'Vespers for <em>the Feast</em>',
-      where: 'Aula Simfonia Jakarta',
-      when:  'Konser Musim Panen &middot; 09 November 2024',
-      src:   'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-      poster:''
+      title:    'Dago Inang Sarge',
+      composer: 'Tapanuli Folksong',
+      where:    'BPK Penabur Jakarta',
+      when:     'Penabur International Choir Festival 2024',
+      src:      'videos/optimized_dago.mp4',
+      poster:   ''
     },
     {
-      title: 'O <em>Magnum</em> Mysterium',
-      where: 'Bali International Choir Festival',
-      when:  'Kompetisi Internasional &middot; 27 Juli 2025',
-      src:   'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-      poster:''
+      title:    'Hentakan Jiwa',
+      composer: 'Ken Steven',
+      where:    'HKBP Serpong',
+      when:     'Pre-Competition Concert Penabur International Choir Festival 2024',
+      src:      'videos/Hentakan Jiwa.mp4',
+      poster:   ''
     },
     {
       title: 'Hallelujah, <em>Amen</em>',
@@ -550,6 +561,7 @@
           <span class="index">${ROMAN[i]} &middot; of &middot; ${ROMAN[PERFORMANCES.length-1]}</span>
         </div>
         <h1>${p.title}</h1>
+        ${p.composer ? `<div class="composer">${p.composer}</div>` : ''}
         <div class="meta">
           <span class="when">${p.when}</span>
           <span class="where">${p.where}</span>
