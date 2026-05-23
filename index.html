@@ -595,13 +595,13 @@
     rail.appendChild(seg);
   });
 
-  // Insert merchandise image slide after the 2nd performance (index 1)
-  const imgSlide = document.createElement('section');
-  imgSlide.className = 'v-img';
-  imgSlide.innerHTML = '<img src="images/2db91528-3ddf-4e25-84f0-3f2c2c0ad13e.jpeg" alt="Merchandise Soli Deo Choir">';
-  const videoSecs = reel.querySelectorAll('section.v');
-  if (videoSecs[1]) videoSecs[1].insertAdjacentElement('afterend', imgSlide);
-  else reel.appendChild(imgSlide);
+  // Insert merchandise image slide after every performance video
+  reel.querySelectorAll('section.v').forEach(sec => {
+    const imgSlide = document.createElement('section');
+    imgSlide.className = 'v-img';
+    imgSlide.innerHTML = '<img src="images/2db91528-3ddf-4e25-84f0-3f2c2c0ad13e.jpeg" alt="Merchandise Soli Deo Choir">';
+    sec.insertAdjacentElement('afterend', imgSlide);
+  });
 
   const videos = [...document.querySelectorAll('.v video')];
   const sections = [...document.querySelectorAll('.v')];
