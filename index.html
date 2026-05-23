@@ -618,6 +618,7 @@
     paused: false,
     playStartedAt: 0,
     imgPauseTimer: 0,
+    imgPausePending: false,
   };
 
   // ——— Helpers ———
@@ -694,6 +695,7 @@
   function setActive(i){
     if (i === state.activeIndex) return;
     clearTimeout(state.imgPauseTimer);
+    state.imgPausePending = false;
     state.activeIndex = i;
     state.playStartedAt = Date.now();
     videos.forEach((v, idx) => {
@@ -730,6 +732,10 @@
       clearActive();
       return;
     }
+    // If the viewport center is within a merchandise image, leave the active video unchanged
+    for (const slide of imgSlides) {
+      if (center >= slide.offsetTop && center < slide.offsetTop + slide.offsetHeight) return;
+    }
     let best = 0, bestDist = Infinity;
     sections.forEach((s, i) => {
       const c = s.offsetTop + s.offsetHeight/2;
@@ -760,7 +766,9 @@
       try { v.currentTime = 0; } catch(e){}
       scrollToImg(i);
       clearTimeout(state.imgPauseTimer);
+      state.imgPausePending = true;
       state.imgPauseTimer = setTimeout(() => {
+        state.imgPausePending = false;
         if (!state.autoAdvance) return;
         const next = i + 1;
         if (next < PERFORMANCES.length) scrollTo(next);
@@ -947,7 +955,7 @@
     if (!v) return;
 
     // Try to keep the active video playing (in case it was silently paused)
-    if (!state.paused && v.paused && v.readyState >= 2) {
+    if (!state.paused && v.paused && v.readyState >= 2 && !state.imgPausePending) {
       playSafe(v);
     }
 
@@ -962,7 +970,9 @@
       try { v.currentTime = 0; } catch(e){}
       scrollToImg(i);
       clearTimeout(state.imgPauseTimer);
+      state.imgPausePending = true;
       state.imgPauseTimer = setTimeout(() => {
+        state.imgPausePending = false;
         if (!state.autoAdvance) return;
         const next = i + 1;
         if (next < PERFORMANCES.length) scrollTo(next);
