@@ -222,6 +222,25 @@
     box-shadow:0 0 14px rgba(212,175,55,.55);
   }
 
+  /* ——— Merchandise image slide ——— */
+  .v-img{
+    position:relative;
+    height:100svh;
+    width:100vw;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#0d0a06;
+  }
+  .v-img img{
+    max-height:92vh;
+    max-width:88vw;
+    object-fit:contain;
+    border-radius:6px;
+    box-shadow:0 12px 80px rgba(0,0,0,.75);
+  }
+
   /* corner runtime */
   .v .runtime{
     position:absolute; top:clamp(14px,2.2vh,28px); right:clamp(20px,4vw,52px);
@@ -574,6 +593,14 @@
     seg.innerHTML = `<span class="bar"></span><span class="num">${ROMAN[i]}</span>`;
     seg.addEventListener('click', (ev) => { ev.preventDefault(); scrollTo(i); });
     rail.appendChild(seg);
+  });
+
+  // Insert merchandise image slide after every performance video
+  reel.querySelectorAll('section.v').forEach(sec => {
+    const imgSlide = document.createElement('section');
+    imgSlide.className = 'v-img';
+    imgSlide.innerHTML = '<img src="images/2db91528-3ddf-4e25-84f0-3f2c2c0ad13e.jpeg" alt="Merchandise Soli Deo Choir">';
+    sec.insertAdjacentElement('afterend', imgSlide);
   });
 
   const videos = [...document.querySelectorAll('.v video')];
