@@ -607,6 +607,7 @@
   const sections = [...document.querySelectorAll('.v')];
   const railSegs = [...rail.querySelectorAll('.seg')];
   const fills = [...document.querySelectorAll('.progress .fill')];
+  const imgSlides = [...document.querySelectorAll('.v-img')];
 
   // ——— State ———
   const state = {
@@ -616,6 +617,8 @@
     loop: true,
     paused: false,
     playStartedAt: 0,
+    imgPauseTimer: 0,
+    imgPausePending: false,
   };
 
   // ——— Helpers ———
@@ -632,6 +635,14 @@
     const el = document.scrollingElement || document.documentElement;
     if (el && el.scrollTo) el.scrollTo({top:0, behavior:'smooth'});
     else window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function scrollToImg(i){
+    const target = imgSlides[i];
+    if (!target) return;
+    const top = target.offsetTop;
+    const el = document.scrollingElement || document.documentElement;
+    if (el && el.scrollTo) el.scrollTo({top, behavior:'smooth'});
+    else window.scrollTo({top, behavior:'smooth'});
   }
   function loopBackAndRestart(){
     scrollToTop();
@@ -683,6 +694,8 @@
 
   function setActive(i){
     if (i === state.activeIndex) return;
+    clearTimeout(state.imgPauseTimer);
+    state.imgPausePending = false;
     state.activeIndex = i;
     state.playStartedAt = Date.now();
     videos.forEach((v, idx) => {
@@ -719,6 +732,10 @@
       clearActive();
       return;
     }
+    // If the viewport center is within a merchandise image, leave the active video unchanged
+    for (const slide of imgSlides) {
+      if (center >= slide.offsetTop && center < slide.offsetTop + slide.offsetHeight) return;
+    }
     let best = 0, bestDist = Infinity;
     sections.forEach((s, i) => {
       const c = s.offsetTop + s.offsetHeight/2;
@@ -744,12 +761,19 @@
       if (i !== state.activeIndex) return;
       fills[i].style.width = '100%';
       if (!state.autoAdvance) return;
-      const next = i + 1;
-      if (next < PERFORMANCES.length){
-        scrollTo(next);
-      } else if (state.loop){
-        setTimeout(loopBackAndRestart, 600);
-      }
+      // Freeze watchdog so it doesn't double-advance during the image pause
+      state.playStartedAt = Date.now() + 99999;
+      try { v.currentTime = 0; } catch(e){}
+      scrollToImg(i);
+      clearTimeout(state.imgPauseTimer);
+      state.imgPausePending = true;
+      state.imgPauseTimer = setTimeout(() => {
+        state.imgPausePending = false;
+        if (!state.autoAdvance) return;
+        const next = i + 1;
+        if (next < PERFORMANCES.length) scrollTo(next);
+        else if (state.loop) loopBackAndRestart();
+      }, 10000);
     });
     v.addEventListener('error', () => {
       // Skip past broken sources after a brief delay so the reel keeps moving
@@ -931,7 +955,7 @@
     if (!v) return;
 
     // Try to keep the active video playing (in case it was silently paused)
-    if (!state.paused && v.paused && v.readyState >= 2) {
+    if (!state.paused && v.paused && v.readyState >= 2 && !state.imgPausePending) {
       playSafe(v);
     }
 
@@ -942,10 +966,18 @@
 
     if (past || exceeded){
       fills[i].style.width = '100%';
-      state.playStartedAt = Date.now() + 99999; // prevent re-fire
-      const next = i + 1;
-      if (next < PERFORMANCES.length) scrollTo(next);
-      else if (state.loop) setTimeout(loopBackAndRestart, 600);
+      state.playStartedAt = Date.now() + 99999;
+      try { v.currentTime = 0; } catch(e){}
+      scrollToImg(i);
+      clearTimeout(state.imgPauseTimer);
+      state.imgPausePending = true;
+      state.imgPauseTimer = setTimeout(() => {
+        state.imgPausePending = false;
+        if (!state.autoAdvance) return;
+        const next = i + 1;
+        if (next < PERFORMANCES.length) scrollTo(next);
+        else if (state.loop) loopBackAndRestart();
+      }, 10000);
     }
   }, 600);
 </script>
