@@ -681,14 +681,13 @@
   function playSafe(v){
     const p = v.play();
     if (p && p.catch) p.catch(() => {
-      // Autoplay blocked — play muted without changing the user's audio preference
-      if (!state.muted) {
-        v.muted = true;
-        v.play().catch(()=>{});
-      } else {
-        // User hasn't opted in yet — surface the pill so they can
-        document.getElementById('audio-pill').classList.add('show');
-      }
+      // Autoplay-with-sound blocked (common on auto-advance, which isn't a user
+      // gesture) — fall back to muted playback so the reel keeps moving, and
+      // resurface the pill so the mismatch is visible and the user can restore
+      // sound with a fresh tap.
+      v.muted = true;
+      v.play().catch(()=>{});
+      document.getElementById('audio-pill').classList.add('show');
     });
   }
 
